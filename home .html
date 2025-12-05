@@ -798,6 +798,39 @@ html.lenis {
 </div>
     <!-- Start of bodyEnd -->
     
+    <!-- Title lock: keep browser tab title fixed to the <title> value -->
+    <script>
+      (function(){
+        try{
+          const titleEl = document.querySelector('title');
+          const intended = (titleEl && titleEl.innerText) ? titleEl.innerText : document.title || 'Aziz';
+
+          // Immediately set the title
+          document.title = intended;
+
+          // Try to override document.title setter to ignore changes and always return intended
+          try{
+            const doc = document;
+            Object.defineProperty(doc, '_lockedTitle', { value: intended, writable: true, configurable: true });
+            Object.defineProperty(doc, 'title', {
+              get() { return doc._lockedTitle; },
+              set(v) { /* ignore external sets - keep intended */ },
+              configurable: true
+            });
+          }catch(e){ /* if that fails, fall back to observer */ }
+
+          // Fallback observer to revert changes to the <title> node
+          if (titleEl) {
+            const mo = new MutationObserver(() => { if (document.title !== intended) document.title = intended; });
+            mo.observe(titleEl, { characterData: true, childList: true, subtree: true });
+          }
+
+          // Interval fallback (last resort)
+          setInterval(()=>{ if (document.title !== intended) document.title = intended; }, 500);
+        }catch(e){/* noop */}
+      })();
+    </script>
+
     <!-- End of bodyEnd -->
 </body>
 </html>
